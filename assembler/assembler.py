@@ -93,7 +93,7 @@ class AssemblerWorker(object):
 				if cmd == AssemblerWorker.LINE:									# line marker
 					AssemblerException.LINE += 1
 				elif cmd != "":													# assemble non blank.
-					self.cmdAssembler.assemble(cmd,self.globals,self.externals)
+					self.cmdAssembler.assemble(cmd,self.globals,self.externals,self.locals.find("index"))
 			self.cmdAssembler.checkStructure()									# check structure ukay.
 		#
 		#		Finished assembly
@@ -112,11 +112,13 @@ external demo 					// a sample dictionary file.
 proc init(p1,p2,p3)
 	$p4 = p1 + p2 + p3
 	$p6 = "hello"
+	$p4?$p6 = 42
 	$p6!2 = 0x2a73+$p4 
-	$test = 0
+	$test = p1?4
 endproc
 
 proc struct(c):
+	index = 13
 	if (c#0):$a=1:endif
 	while (c<0):c=c+1:endwhile
 	for (c):$a=$a+1:endfor
