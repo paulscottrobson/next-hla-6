@@ -11,10 +11,9 @@
 
 # ***************************************************************************************
 #					This is a code generator for an idealised CPU
-#
 # ***************************************************************************************
 
-class DemoCodeGenerator(object):
+class SampleCodeGenerator(object):
 	def __init__(self):
 		self.pc = 0x1000
 		self.ops = { "+":"add","-":"sub","*":"mul","/":"div","%":"mod","&":"and","|":"ora","^":"xor" }
