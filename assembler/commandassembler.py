@@ -32,7 +32,7 @@ class CommandAssembler(object):
 	#
 	#		Assemble a single instruction.
 	#
-	def assemble(self,line,globalDict,externalDict,indexVariable):
+	def assemble(self,line,procedureDict,externalDict,indexVariable):
 		print("\t\t ------ "+line+" ------")
 		if line == "endproc":													# endproc
 			self.codeGenerator.returnSubroutine()
@@ -45,7 +45,7 @@ class CommandAssembler(object):
 		elif line == "endfor":													# endfor
 			self.endFor(line)
 		elif re.match("^"+self.rxIdentifier+"\(",line) is not None:				# <procedure>(parameters)
-			self.procedureCall(line)
+			self.procedureCall(line,procedureDict,externalDict)
 		else:
 			m = self.simplelexpr.match(line) 									# is it <var> = <expr>
 			if m is not None:
@@ -80,8 +80,27 @@ class CommandAssembler(object):
 	#
 	#		Assemble a procedure invocation
 	#
-	def procedureCall(self,line):
-		print(">>>",line)
+	def procedureCall(self,line,procedureDict,externalDict):
+		m = re.match("^("+self.rxIdentifier+")\((.*?)\)$",line)					# split into parts
+		if m is None:
+			raise AssemblerException("Bad procedure call")
+		name = m.group(1)														# get the parts
+		parameters = [x for x in m.group(2).split(",") if x != ""]					
+		procIdent = procedureDict.find(name)									# get info about it
+		if procIdent is None:
+			procIdent = externalDict.find(name)
+		if procIdent is None:
+			raise AssemblerException("Unknown procedure "+name)
+
+		if procIdent.getParameterCount() != len(parameters):					# correct parameters
+			raise AssemblerException("Wrong number of parameters")
+
+		for i in range(0,len(parameters)):										# set up parameter registers
+			m = self.splitSimpleTerm.match(parameters[i])
+			if m is None:
+				raise AssemblerException("Bad parameter")
+			self.codeGenerator.loadParamRegister(i,m.group(1) == "",int(m.group(2)))
+		self.codeGenerator.callSubroutine(procIdent.getValue())					# code to call subroutine.
 	#
 	#		Assemble code for if/while structure. While is an If which loops to the test :)
 	#
@@ -122,3 +141,4 @@ class CommandAssembler(object):
 		if info[0] != "for":													# check it is correct.
 			raise AssemblerException("endfor without for")
 		self.codeGenerator.endForCode(info[1])		#
+

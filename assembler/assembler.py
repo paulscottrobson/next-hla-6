@@ -93,7 +93,7 @@ class AssemblerWorker(object):
 				if cmd == AssemblerWorker.LINE:									# line marker
 					AssemblerException.LINE += 1
 				elif cmd != "":													# assemble non blank.
-					self.cmdAssembler.assemble(cmd,self.globals,self.externals,self.locals.find("index"))
+					self.cmdAssembler.assemble(cmd,self.procedures,self.externals,self.locals.find("index"))
 			self.cmdAssembler.checkStructure()									# check structure ukay.
 		#
 		#		Finished assembly
@@ -126,14 +126,22 @@ proc struct(c):
 endproc
 
 proc test.version()
-	test.version()
-	init($demo,count,42)
+	init($demo,count,"42")
 	$demo = @$demo
 	count = 0
 	count = count + 1
 	struct(42)
 endproc
+
+proc x()
+test.version()
+endproc
+
 """.split("\n")
 
 	aw = AssemblerWorker(SampleCodeGenerator())
 	aw.assemble(src)
+
+# TODO: List
+# 		Write Z80 Code Generator
+#		Test it out with a real kernel.
