@@ -107,7 +107,7 @@ AssemblerWorker.ADDR = "@"														# indicates address.
 if __name__ == "__main__":
 	src = """
 
-external demo 					// a sample dictionary file.
+external standard 					// a sample dictionary file.
 
 proc init(p1,p2,p3)
 	$p4 = p1 + p2 + p3
@@ -134,7 +134,9 @@ proc test.version()
 endproc
 
 proc x()
-test.version()
+	test.version()
+	c = 0
+	console.write(c,1)
 endproc
 
 """.split("\n")
