@@ -24,13 +24,11 @@ from identifierprocessor import *
 class AssemblerWorker(object):
 	def __init__(self,codeGenerator):
 		self.codeGen = codeGenerator 											# save the code generator
-		self.keywords = "if,endif,while,endwhile,for,endfor,endproc".split(",")
 		self.locals = Dictionary()												# local identifiers
 		self.globals = Dictionary()												# global identifiers
 		self.procedures = Dictionary()											# procedures.
 		self.externals = Dictionary()											# external identifiers
 		self.rxIdentifier = "[\$\_a-z][a-z0-9\.\_]*"							# rx matching identifier
-		self.rxcIdentifier = re.compile("^"+self.rxIdentifier+"$")				# compiled version
 		self.preProcessor = PreProcessor()										# preprocessor worker.
 		self.identProcessor = IdentifierProcessor()								# identifier worker.
 	#
@@ -48,9 +46,9 @@ class AssemblerWorker(object):
 		#
 		code = self.preProcessor.processHexConstants(code)						# convert hex constants.
 																				# scan for globals in source
-		self.identProcessor.extractGlobals(code,self.globals,self.codeGen,self.rxIdentifier)	
+		self.identProcessor.extractVariables(code,self.globals,self.codeGen,"\$"+self.rxIdentifier)	
 																				# replace globals in source
-		code = self.identProcessor.processGlobals(code,self.globals,self.externals,self.rxIdentifier)	
+		code = self.identProcessor.processVariables(code,self.globals,self.externals,"\$"+self.rxIdentifier)	
 		print(code)
 
 		code = re.split("(proc"+self.rxIdentifier+"\(.*?\))",code)				# split into procedures
@@ -65,9 +63,24 @@ class AssemblerWorker(object):
 			raise AssemblerException("Procedure with no body")
 
 		for cn in range(0,len(code),2):											# +0 header +1 body
-			print(code[cn],code[cn+1])
+			#print(code[cn],code[cn+1])
+			mHeader=re.match("^proc("+self.rxIdentifier+")\((.*)\)$",code[cn])	# split up the header
+			assert mHeader is not None
 
-		print(code)
+			self.locals = Dictionary()											# new locals dictionary.
+																				# Look for locals.
+			self.identProcessor.extractVariables(code[cn+1],		\
+									self.locals,self.codeGen,self.rxIdentifier)
+																				# process the header.
+			ident = self.identProcessor.processHeader(mHeader.group(1),	\
+							mHeader.group(2),self.locals,self.codeGen,self.rxIdentifier)
+			self.procedures.addIdentifier(ident)								# add procedure to dict.
+
+			pcode = self.identProcessor.processVariables(code[cn+1],			# replace the locals.
+									self.locals,self.externals,self.rxIdentifier)
+			print(pcode)
+		print(self.procedures.toString())
+
 
 AssemblerWorker.LINE = "~"														# marks new line.
 AssemblerWorker.ADDR = "@"														# indicates address.
@@ -80,14 +93,18 @@ if __name__ == "__main__":
 external demo.dict 					// a sample dictionary file.
 
 proc init(p1,p2,p3)
+	p1 + p2 + p3 > $p4
 	"hello" >$p4 >$p6
 	0x2a73+$p4 >p5 >$p6?2
-	0>$test
+	0>$test:endproc
 
 
 proc test.version()
-	0>$demo
-
+	test.version()
+	init($demo,count,42)
+	0>$demo>count
+	count+1>count
+	endproc
 """.split("\n")
 
 	aw = AssemblerWorker(SampleCodeGenerator())
