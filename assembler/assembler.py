@@ -25,14 +25,21 @@ from commandassembler import *
 class AssemblerWorker(object):
 	def __init__(self,codeGenerator):
 		self.codeGen = codeGenerator 											# save the code generator
+
 		self.locals = Dictionary()												# local identifiers
 		self.globals = Dictionary()												# global identifiers
 		self.procedures = Dictionary()											# procedures.
 		self.externals = Dictionary()											# external identifiers
+
 		self.rxIdentifier = "[\$\_a-z][a-z0-9\.\_]*"							# rx matching identifier
 		self.preProcessor = PreProcessor()										# preprocessor worker.
 		self.identProcessor = IdentifierProcessor()								# identifier worker.
 		self.cmdAssembler = CommandAssembler(codeGenerator,self.rxIdentifier)	# assemble a command
+
+																				# add return here, because it's permanent
+		retid = VariableIdentifier("$return",codeGenerator.allocSpace(None,"$return"))
+		self.externals.addIdentifier(retid)
+
 	#
 	#		Assemble a list of strings.
 	#
@@ -80,13 +87,17 @@ class AssemblerWorker(object):
 
 			pcode = self.identProcessor.processVariables(code[cn+1],			# replace the locals.
 									self.locals,self.externals,self.rxIdentifier)
+			pcode = pcode.replace(AssemblerWorker.ADDR+"@","")					# makes @ operator work.
 			pcode = pcode.split(":")											# split into individual commands
 			for cmd in pcode:
-				if cmd == "~":													# line marker
+				if cmd == AssemblerWorker.LINE:									# line marker
 					AssemblerException.LINE += 1
 				elif cmd != "":													# assemble non blank.
 					self.cmdAssembler.assemble(cmd,self.globals,self.externals)
-
+			self.cmdAssembler.checkStructure()									# check structure ukay.
+		#
+		#		Finished assembly
+		#
 
 AssemblerWorker.LINE = "~"														# marks new line.
 AssemblerWorker.ADDR = "@"														# indicates address.
@@ -99,23 +110,25 @@ if __name__ == "__main__":
 external demo 					// a sample dictionary file.
 
 proc init(p1,p2,p3)
-	p1 + p2 + p3 > $p4
-	"hello" >$p4 >$p6
-	0x2a73+$p4 >p5 >$p6?2
-	0>$test
+	$p4 = p1 + p2 + p3
+	$p6 = "hello"
+	$p6!2 = 0x2a73+$p4 
+	$test = 0
 endproc
 
 proc struct(c):
-	if (c#0):1>$a:endif
-	while (c<0):$a+1>$a:endwhile
-	for (c):$a+1>$a:endfor
+	if (c#0):$a=1:endif
+	while (c<0):c=c+1:endwhile
+	for (c):$a=$a+1:endfor
+	$return = 69
 endproc
 
 proc test.version()
 	test.version()
 	init($demo,count,42)
-	0>$demo>count
-	count+1>count
+	$demo = @$demo
+	count = 0
+	count = count + 1
 	struct(42)
 endproc
 """.split("\n")

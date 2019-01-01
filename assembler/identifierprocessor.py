@@ -21,16 +21,16 @@ class IdentifierProcessor(object):
 	def __init__(self):
 		self.keywords = "if,endif,while,endwhile,for,endfor,endproc".split(",")
 	#
-	#		Extract variables (e.g the sequence >$<identifier>) NOT followed by !?( and create them.
+	#		Extract variables (e.g the sequence :$<identifier> = and create them.
 	#		can be used for global or local.
 	#
 	def extractVariables(self,source,dictionary,codeGen,rxIdentifier):
-		parts = re.split("(\>"+rxIdentifier+"[\!\?\()]*)",source)				# split out, check for !?(
+		parts = re.split("(\:"+rxIdentifier+"\=]*)",source)						# split out, check for !?(
 		for pn in range(0,len(parts)):											# scan them
 			if parts[pn] not in self.keywords:		
-				if re.match("^\>"+rxIdentifier+"$",parts[pn]) is not None:		# NOT indirect assign or proc call
-					if dictionary.find(parts[pn][1:]) is None:					# if doesn't exist already
-						varIdent = VariableIdentifier(parts[pn][1:],codeGen.allocSpace(None,parts[pn][1:]))
+				if re.match("^\:"+rxIdentifier+"\=$",parts[pn]) is not None:	# NOT indirect assign or proc call
+					if dictionary.find(parts[pn][1:-1]) is None:				# if doesn't exist already
+						varIdent = VariableIdentifier(parts[pn][1:-1],codeGen.allocSpace(None,parts[pn][1:-1]))
 						dictionary.addIdentifier(varIdent)
 	#
 	#		Process variables - replace them all with addresses - can be used for local and
@@ -64,9 +64,10 @@ class IdentifierProcessor(object):
 		for pn in range(0,len(parameters)):										# for each parameter
 			if re.match("^"+rxIdentifier+"$",parameters[pn]) is None:			# validate it.
 				raise AssemblerException("Bad parameter "+parameters[pn])
+			if localsDictionary.find(parameters[pn]) is None:
 																				# create id/variable
-			pid = VariableIdentifier(parameters[pn],codeGenerator.allocSpace(None,parameters[pn]))	
-			localsDictionary.addIdentifier(pid)									# add to local dict
+				pid = VariableIdentifier(parameters[pn],codeGenerator.allocSpace(None,parameters[pn]))	
+				localsDictionary.addIdentifier(pid)									# add to local dict
 		#
 		#		Create the actual first bit.
 		#
@@ -77,6 +78,6 @@ class IdentifierProcessor(object):
 		for pn in range(0,len(parameters)):
 			codeGenerator.storeParamRegister(pn,localsDictionary.find(parameters[pn]).getValue())
 		#
-		#		Return the
+		#		Return the identifier for the new procedure.
 		#
 		return procIdent

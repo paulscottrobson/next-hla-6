@@ -21,6 +21,7 @@ class CommandAssembler(object):
 	def __init__(self,codeGenerator,rxIdentifier):
 		self.codeGenerator = codeGenerator
 		self.rxIdentifier = rxIdentifier
+		self.structureStack = [ [ "MARKER",0 ] ]								# marker on stack.
 	#
 	#		Assemble a single instruction.
 	#
@@ -40,6 +41,12 @@ class CommandAssembler(object):
 #			self.procedureCall(line)
 #		else:
 #			self.assembleExpression(line)										# try it as a straight expression.
+	#
+	#		Check structure stack.
+	#
+	def checkStructure(self):
+		if len(self.structureStack) != 1:
+			raise AssemblerException("Imbalanced marker")
 	#
 	#		Assemble a procedure invocation
 	#
