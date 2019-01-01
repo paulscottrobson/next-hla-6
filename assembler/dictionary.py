@@ -9,6 +9,8 @@
 # ***************************************************************************************
 # ***************************************************************************************
 
+import os
+
 # ***************************************************************************************
 #						Identifiers to store in the dictionary
 # ***************************************************************************************
@@ -70,8 +72,11 @@ class Dictionary(object):
 	#		Load file into current dictionary
 	#
 	def load(self,fileName):
+		if not os.path.isfile(fileName):
+			return False
 		for line in [x.strip() for x in open(fileName).readlines() if x.strip() != ""]:
 			self.importIdentifier(line)
+		return True
 	#
 	#		Export dictionary
 	#

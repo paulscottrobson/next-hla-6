@@ -19,3 +19,5 @@ class AssemblerException(Exception):
 		self.message = message
 		print(message,AssemblerException.LINE)
 
+AssemblerException.LINE = 0
+AssemblerException.FILE = ""
