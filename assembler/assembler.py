@@ -58,7 +58,7 @@ class AssemblerWorker(object):
 		self.identProcessor.extractVariables(code,self.globals,self.codeGen,"\$"+self.rxIdentifier)	
 																				# replace globals in source
 		code = self.identProcessor.processVariables(code,self.globals,self.externals,"\$"+self.rxIdentifier)	
-		print(code)
+		#print(code)
 
 		code = re.split("(proc"+self.rxIdentifier+"\(.*?\))",code)				# split into procedures
 
