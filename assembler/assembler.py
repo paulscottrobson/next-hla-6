@@ -16,6 +16,7 @@ from dictionary import *
 from samplecodegen import *
 from preprocessor import *
 from identifierprocessor import *
+from commandassembler import *
 
 # ***************************************************************************************
 #									Main Assembler class
@@ -31,6 +32,7 @@ class AssemblerWorker(object):
 		self.rxIdentifier = "[\$\_a-z][a-z0-9\.\_]*"							# rx matching identifier
 		self.preProcessor = PreProcessor()										# preprocessor worker.
 		self.identProcessor = IdentifierProcessor()								# identifier worker.
+		self.cmdAssembler = CommandAssembler(codeGenerator,self.rxIdentifier)	# assemble a command
 	#
 	#		Assemble a list of strings.
 	#
@@ -78,8 +80,12 @@ class AssemblerWorker(object):
 
 			pcode = self.identProcessor.processVariables(code[cn+1],			# replace the locals.
 									self.locals,self.externals,self.rxIdentifier)
-			print(pcode)
-		print(self.procedures.toString())
+			pcode = pcode.split(":")											# split into individual commands
+			for cmd in pcode:
+				if cmd == "~":													# line marker
+					AssemblerException.LINE += 1
+				elif cmd != "":													# assemble non blank.
+					self.cmdAssembler.assemble(cmd,self.globals,self.externals)
 
 
 AssemblerWorker.LINE = "~"														# marks new line.
@@ -90,21 +96,28 @@ AssemblerWorker.ADDR = "@"														# indicates address.
 if __name__ == "__main__":
 	src = """
 
-external demo.dict 					// a sample dictionary file.
+external demo 					// a sample dictionary file.
 
 proc init(p1,p2,p3)
 	p1 + p2 + p3 > $p4
 	"hello" >$p4 >$p6
 	0x2a73+$p4 >p5 >$p6?2
-	0>$test:endproc
+	0>$test
+endproc
 
+proc struct(c):
+	if (c#0):1>$a:endif
+	while (c<0):$a+1>$a:endwhile
+	for (c):$a+1>$a:endfor
+endproc
 
 proc test.version()
 	test.version()
 	init($demo,count,42)
 	0>$demo>count
 	count+1>count
-	endproc
+	struct(42)
+endproc
 """.split("\n")
 
 	aw = AssemblerWorker(SampleCodeGenerator())

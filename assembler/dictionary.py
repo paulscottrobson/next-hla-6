@@ -73,7 +73,9 @@ class Dictionary(object):
 	#
 	def load(self,fileName):
 		if not os.path.isfile(fileName):
-			return False
+			fileName = fileName + ".dict"
+			if not os.path.isfile(fileName):
+				return False
 		for line in [x.strip() for x in open(fileName).readlines() if x.strip() != ""]:
 			self.importIdentifier(line)
 		return True
