@@ -51,6 +51,7 @@ class Z80CodeGenerator(object):
 	#		Store A indirect to address [variable] + offset/[offset]
 	#		
 	def storeIndirect(self,dataSize,baseVariable,offsetIsConstant,offset):
+		pass
 	#
 	#		Generate for code.
 	#

@@ -41,5 +41,5 @@ class SnasmLabelExtractor(object):
 	def getLabels(self):
 		return self.labels
 
-class LabelExtractor(ZasmLabelExtractor):
+class LabelExtractor(SnasmLabelExtractor):
 	pass

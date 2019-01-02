@@ -12,6 +12,7 @@
 FirstCodePage = $20 								; $20 = code page.
 StackTop = $5FFE 									; Z80 call stack top.
 
+		opt 	zxnextreg
 		org 	$8000 								; $8000 boot.
 		jr 		Boot
 		org 	$8004 								; $8004 address of sysinfo
@@ -36,4 +37,4 @@ __KernelHalt: 										; if boot address not set.
 		jr 		__KernelHalt
 
 AlternateFont:										; nicer font
-		include "font.inc" 							; can be $3D00 here to save memory
+		include "common/font.inc" 					; can be $3D00 here to save memory
