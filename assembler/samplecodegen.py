@@ -90,8 +90,8 @@ class SampleCodeGenerator(object):
 	#
 	def allocSpace(self,count = None,reason = None):
 		addr = self.pc
-		count = self.getWordSize() if count is None else count
-		self.pc += count
+		count = 1 if count is None else count
+		self.pc += (count * self.getWordSize())
 		print("${0:06x}  ds    ${1:04x} ; {2}".format(addr,count,"" if reason is None else reason))
 		return addr
 	#

@@ -14,9 +14,11 @@ import re
 from exceptions import *
 from dictionary import *
 from samplecodegen import *
+from z80codegen import *
 from preprocessor import *
 from identifierprocessor import *
 from commandassembler import *
+from imagelib import *
 
 # ***************************************************************************************
 #									Main Assembler class
@@ -109,7 +111,7 @@ if __name__ == "__main__":
 
 external standard 					// a sample dictionary file.
 
-proc init(p1,p2,p3)
+proc init(p1,p2,p3,p4)
 	$p4 = p1 + p2 + p3
 	$p6 = "hello"
 	$p4?$p6 = 42
@@ -126,7 +128,7 @@ proc struct(c):
 endproc
 
 proc test.version()
-	init($demo,count,"42")
+	init($demo,count,"42",69)
 	$demo = @$demo
 	count = 0
 	count = count + 1
@@ -140,10 +142,15 @@ proc x()
 endproc
 
 """.split("\n")
-
-	aw = AssemblerWorker(SampleCodeGenerator())
+	zImg = BootImage("standard.lib")
+	cg = SampleCodeGenerator()
+	cgz = Z80CodeGenerator(zImg)
+	aw = AssemblerWorker(cgz)
 	aw.assemble(src)
+	zImg.save("boot.img")
 
-# TODO: List
-# 		Write Z80 Code Generator
+# TODO: 
+# 		Complete Z80 Code Generator
+#		Boots procedures.
 #		Test it out with a real kernel.
+# 		Memory Allocation ?

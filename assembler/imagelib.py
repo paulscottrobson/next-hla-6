@@ -109,7 +109,6 @@ class BootImage(object):
 
 if __name__ == "__main__":
 	z = BootImage("standard.lib")
-	print(z.findFreePage())
+	#print(z.findFreePage())
 	print(len(z.image))
-	print(z.find("sys.modulus"))
 	z.save("boot.img")

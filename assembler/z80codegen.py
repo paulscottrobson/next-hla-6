@@ -9,18 +9,22 @@
 # ***************************************************************************************
 # ***************************************************************************************
 
+from imagelib import *
+
 # ***************************************************************************************
-#					This is a code generator for an idealised CPU
+#					This is a code generator for the Z80 (Next)
 # ***************************************************************************************
 
-class SampleCodeGenerator(object):
-	def __init__(self):
-		pass
+class Z80CodeGenerator(object):
+	def __init__(self,image):
+		self.image = image
+		self.image.echo = True
+		self.freeMemory = 0x8000
 	#
 	#		Get current address
 	#
 	def getAddress(self):
-		pass
+		return self.image.getCodeAddress()
 	#
 	#		Get word size
 	#
@@ -30,7 +34,8 @@ class SampleCodeGenerator(object):
 	#		Load a constant or variable into the accumulator.
 	#
 	def loadDirect(self,isConstant,value):
-		pass
+		self.image.cByte(0x21 if isConstant else 0x2A)
+		self.image.cWord(value)
 	#
 	#		Do a binary operation on a constant or variable on the accumulator
 	#
@@ -40,12 +45,12 @@ class SampleCodeGenerator(object):
 	#		Store direct
 	#
 	def storeDirect(self,value):
-		pass
+		self.image.cByte(0x22)
+		self.image.cWord(value)
 	#
 	#		Store A indirect to address [variable] + offset/[offset]
 	#		
 	def storeIndirect(self,dataSize,baseVariable,offsetIsConstant,offset):
-		pass
 	#
 	#		Generate for code.
 	#
@@ -66,35 +71,51 @@ class SampleCodeGenerator(object):
 	#		Allocate count bytes of meory, default is word size
 	#
 	def allocSpace(self,count = None,reason = None):
-		pass
+		count = 1 if count is None else count
+		count *= self.getWordSize()
+		self.freeMemory -= count
+		return self.freeMemory
 	#
 	#		Load constant/variable to a temporary area
 	#
 	def loadParamRegister(self,regNumber,isConstant,value):
-		pass
+		cmds = [0x21,0x11,0x01,0xDD21] if isConstant else [0x2A,0xED5B,0xED4B,0xDD2A]
+		if cmds[regNumber] >= 0x100:
+			self.image.cByte(cmds[regNumber] >> 8)
+		self.image.cByte(cmds[regNumber] & 0xFF)
+		self.image.cWord(value)
 	#
 	#		Copy parameter to a temporary area
 	#
 	def storeParamRegister(self,regNumber,address):
-		pass
+		cmds = [0x22,0xED53,0xED43,0xDD22]
+		if cmds[regNumber] >= 0x100:
+			self.image.cByte(cmds[regNumber] >> 8)
+		self.image.cByte(cmds[regNumber] & 0xFF)
+		self.image.cWord(address)
 	#
 	#		Create a string constant (done outside procedures)
 	#
 	def createStringConstant(self,string):
-		pass
+		addr = self.getAddress()
+		for c in string:
+			self.image.cByte(ord(c))
+		self.image.cByte(0)
+		return addr
 	#
 	#		Call a subroutine
 	#
 	def callSubroutine(self,address):
-		pass
+		self.image.cByte(0xCD)
+		self.image.cWord(address)
 	#
 	#		Return from subroutine.
 	#
 	def returnSubroutine(self):
-		pass
+		self.image.cByte(0xC9)
 
 if __name__ == "__main__":
-	cg = Z80CodeGenerator()
+	cg = Z80CodeGenerator(BootImage())
 	cg.loadDirect(True,42)
 	cg.loadDirect(False,42)	
 	print("------------------")
