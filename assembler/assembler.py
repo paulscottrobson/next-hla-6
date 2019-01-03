@@ -50,6 +50,8 @@ class AssemblerWorker(object):
 
 		code = self.preProcessor.tidySource(code)								# basic tidying up.
 		code = self.preProcessor.loadExternalDictionaries(code,self.externals)	# load in any external dictionaries
+		self.codeGen.setExternals(self.externals)								# tell codegen about them.
+		
 		code = self.preProcessor.processQuotedStrings(code,self.codeGen)		# convert quoted strings
 		#
 		code = (":"+AssemblerWorker.LINE+":").join(code)						# put them all together
@@ -114,7 +116,7 @@ external standard 					// a sample dictionary file.
 proc init(p1,p2,p3,p4)
 	$p4 = p1 + p2 + p3
 	$p6 = "hello"
-	$p4?$p6 = 42
+	$p4?$p6 = 42-$p6+2-3
 	$p6!2 = 0x2a73+$p4 
 	$test = p1?4
 endproc
@@ -151,6 +153,7 @@ endproc
 
 # TODO: 
 # 		Complete Z80 Code Generator
+#		+<const> *<const> /<const> optimisation.
 #		Boots procedures.
 #		Test it out with a real kernel.
 # 		Memory Allocation ?

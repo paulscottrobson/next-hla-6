@@ -20,6 +20,7 @@ class Z80CodeGenerator(object):
 		self.image = image
 		self.image.echo = True
 		self.freeMemory = 0x8000
+		self.libFuncs = { ""}
 	#
 	#		Get current address
 	#
@@ -31,6 +32,17 @@ class Z80CodeGenerator(object):
 	def getWordSize(self):
 		return 2
 	#
+	#		Set externals
+	#
+	def setExternals(self,externals):
+		srcOp = { "*":"multiply","/":"divide","%":"modulus","&":"and","|":"or","^":"xor" }
+		self.opRoutine = {}
+		for k in srcOp.keys():
+			routineID = externals.find("sys."+srcOp[k])
+			assert routineID is not None,"sys."+srcOp[k]
+			self.opRoutine[k] = routineID.getValue()
+		print(externals.toString())
+	#
 	#		Load a constant or variable into the accumulator.
 	#
 	def loadDirect(self,isConstant,value):
@@ -40,7 +52,44 @@ class Z80CodeGenerator(object):
 	#		Do a binary operation on a constant or variable on the accumulator
 	#
 	def binaryOperation(self,operator,isConstant,value):
-		pass
+		if operator == "-" and isConstant:						# -<constant> => +<-constant>
+			self.binaryOperation("+",isConstant,(-value) & 0xFFFF)
+			return
+
+		if operator == "!" or operator == "?":					# indirection
+			self.binaryOperation("+",isConstant,value)			# address in HL
+			if operator == "?":
+				self.image.cByte(0x6E)							# ld l,(hl)
+				self.image.cByte(0x26)							# ld h,nn
+				self.image.cByte(0x00)
+			else:
+				self.image.cByte(0x7E)							# ld a,(hl)
+				self.image.cByte(0x23)							# inc hl
+				self.image.cByte(0x6E)							# ld h,(hl)
+				self.image.cByte(0x6F)							# ld l,a
+			return
+
+		if isConstant:											# code loads value into BC
+			self.image.cByte(0x01)
+			self.image.cWord(value)
+		else:
+			self.image.cByte(0xED)
+			self.image.cByte(0x4B)
+			self.image.cWord(value)
+
+		if operator == "+":
+			self.image.cByte(0x09)								# add hl,bc
+			return
+
+		if operator == "-":
+			self.image.cByte(0xAF)								# xor a
+			self.image.cByte(0xED)								# sbc hl,bc
+			self.image.cByte(0x42)
+			return
+
+		assert operator in self.opRoutine
+		self.image.cByte(0xCD)									# CALL binary operator.
+		self.image.cWord(self.opRoutine[operator])	
 	#
 	#		Store direct
 	#
@@ -51,7 +100,13 @@ class Z80CodeGenerator(object):
 	#		Store A indirect to address [variable] + offset/[offset]
 	#		
 	def storeIndirect(self,dataSize,baseVariable,offsetIsConstant,offset):
-		pass
+		self.image.cByte(0xEB)						# ex de,hl
+		self.loadDirect(False,baseVariable)
+		self.binaryOperation("+",offsetIsConstant,offset)
+		self.image.cByte(0x73)						# ld (hl),e
+		if dataSize == "!":
+			self.image.cByte(0x23)					# inc hl
+			self.image.cByte(0x72)					# ld (hl),d
 	#
 	#		Generate for code.
 	#

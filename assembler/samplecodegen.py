@@ -28,6 +28,11 @@ class SampleCodeGenerator(object):
 	def getWordSize(self):
 		return 2
 	#
+	#		Set externals
+	#
+	def setExternals(self,externals):
+		pass
+	#
 	#		Load a constant or variable into the accumulator.
 	#
 	def loadDirect(self,isConstant,value):
