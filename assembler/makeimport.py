@@ -16,7 +16,7 @@ from labels import *
 assert len(sys.argv) == 2
 stem = sys.argv[1]													# base of lib e.g. standard for standard.lib
 xDict = Dictionary()												# blank dictionary
-labels = LabelExtractor(stem+".lib.vice").getLabels()				# get labels
+labels = LabelExtractor(stem+".lst").getLabels()					# get labels
 
 for l in labels.keys():												# scan labels for import_
 	if l[:7] == "import_":									# is it IMPORT_, then decode name and add it.
